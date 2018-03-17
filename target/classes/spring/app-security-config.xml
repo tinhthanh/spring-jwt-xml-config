@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="windows-1252"?>
+<beans:beans xmlns="http://www.springframework.org/schema/security"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xmlns:beans="http://www.springframework.org/schema/beans"
+             xsi:schemaLocation="
+    http://www.springframework.org/schema/security 
+    http://www.springframework.org/schema/security/spring-security-4.2.xsd
+    http://www.springframework.org/schema/beans 
+    http://www.springframework.org/schema/beans/spring-beans-4.2.xsd">
+
+    <!--UserDetailService implement-->
+    <beans:bean id="customUserDetailService" class="com.pal.intern.config.security.UserDetailServiceImp"></beans:bean>
+    
+    <!--password encoder implement-->
+    <beans:bean id="passwordEncoder" class="org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder">
+        <beans:constructor-arg name="strength" value="12"></beans:constructor-arg>
+    </beans:bean>
+    
+    <beans:bean id="authenticationTokenFilterBean" class="com.pal.intern.config.security.JwtAuthenticationFilter"></beans:bean>
+        
+    <beans:bean id="unauthorizedHandler" class="com.pal.intern.config.security.JwtAuthenticationEntryPoint"></beans:bean>
+    
+    <beans:bean id="corsFilter" class="org.springframework.web.cors.UrlBasedCorsConfigurationSource" ></beans:bean>
+    
+    
+    <authentication-manager alias="authenticationManager">
+        <authentication-provider user-service-ref="customUserDetailService">
+            <password-encoder ref="passwordEncoder"></password-encoder>
+        </authentication-provider>
+    </authentication-manager>
+    
+    <http auto-config="true" create-session="stateless" entry-point-ref="unauthorizedHandler">
+			<cors configuration-source-ref="corsFilter" />
+			<csrf disabled="true"/>
+			<intercept-url pattern="/auth/**" method="POST" access="permitAll"/>
+			<intercept-url pattern="/*" method="GET" access="hasRole('USER')"/>
+			<custom-filter before="BASIC_AUTH_FILTER" ref="authenticationTokenFilterBean"/>
+    </http>
+    
+    
+</beans:beans>
